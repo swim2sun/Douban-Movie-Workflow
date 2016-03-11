@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>io.github.swim2sun</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>353A9AB9-5BFF-4DF7-91E0-A6CE56F60226</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>A5816188-347E-404F-98E4-89C4A002F662</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
+		<key>4ACEF39F-2AEA-4F39-88CD-407D2D024B8F</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>353A9AB9-5BFF-4DF7-91E0-A6CE56F60226</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>swim2sun</string>
+	<key>description</key>
+	<string>Search movie from 'movie.douban.com'</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Douban Movie</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>plusspaces</key>
+				<false/>
+				<key>url</key>
+				<string>{query}</string>
+				<key>utf8</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>A5816188-347E-404F-98E4-89C4A002F662</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>1</integer>
+				<key>argument</key>
+				<integer>1</integer>
+				<key>hotkey</key>
+				<integer>0</integer>
+				<key>hotmod</key>
+				<integer>0</integer>
+				<key>hotstring</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>4ACEF39F-2AEA-4F39-88CD-407D2D024B8F</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>127</integer>
+				<key>keyword</key>
+				<string>db</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>script</key>
+				<string># encoding:utf-8
+__author__ = 'youxiangyang'
+from feedback import Feedback
+import urllib
+import urllib2
+import re
+
+keyword = '{query}'
+param = {"search_text": keyword}
+data = urllib.urlencode(param)
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    # 'Accept-Encoding':'gzip, deflate, sdch',
+    'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.4',
+    'Cache-Control': 'max-age=0',
+    'Host': 'movie.douban.com',
+    'Proxy-Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1'
+}
+request = urllib2.Request("https://movie.douban.com/subject_search", data, headers)
+response = urllib2.urlopen(request)
+html = response.read()
+
+patten1 = re.compile(r'(\s\s+)|\n')
+html = re.sub(patten1, ' ', html)
+patten2 = re.compile(r'(&lt;span style="font-size:12px;"&gt;)|&lt;/span&gt;')
+patten3 = re.compile(r'&lt;div class="star clearfix"&gt;\s*?&lt;span class="pl"&gt;')
+html = re.sub(patten3, '&lt;div class="star clearfix"&gt; &lt;span class="rating_nums"&gt; &lt;/span&gt;&lt;span class="pl"&gt;', html)
+find_re = re.compile(
+    r'&lt;a class="nbg.+?&lt;img src="(.+?)".+?&lt;div class="pl2"&gt;.+?&lt;a href="(.+?)".+?&gt;(.+?)&lt;/a&gt;.+?&lt;p class="pl"&gt;(.+?)&lt;/p&gt;.+?&lt;div class="star clearfix"&gt;.*?&lt;span class="rating_nums"&gt;(.*?)&lt;/span&gt;.*?&lt;span class="pl"&gt;(.+?)&lt;/span&gt;',
+    re.DOTALL)
+
+fb = Feedback()
+for x in find_re.findall(html):
+    iconUrl = x[0]  # icon
+    link = x[1]  # 链接
+    title = x[2]  # 片名 包含别名
+    title = re.sub(patten2, '', title)
+    content = x[3]  # 简介
+    rating = x[4].strip()  # 评价
+    rate_count = x[5]  # 评价数
+    if rating:
+        rateNum = str(int(float(rating)))
+    else:
+        rateNum = 'unknow'
+        rating = '?.?'
+    fb.add_item(rating+"\t"+title,
+        subtitle=rate_count+"\t"+content,
+        arg=link,icon='favicons/'+rateNum+'.png')
+print fb
+</string>
+				<key>title</key>
+				<string>豆瓣电影</string>
+				<key>type</key>
+				<integer>3</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>353A9AB9-5BFF-4DF7-91E0-A6CE56F60226</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>353A9AB9-5BFF-4DF7-91E0-A6CE56F60226</key>
+		<dict>
+			<key>ypos</key>
+			<real>30</real>
+		</dict>
+		<key>4ACEF39F-2AEA-4F39-88CD-407D2D024B8F</key>
+		<dict>
+			<key>ypos</key>
+			<real>30</real>
+		</dict>
+		<key>A5816188-347E-404F-98E4-89C4A002F662</key>
+		<dict>
+			<key>ypos</key>
+			<real>30</real>
+		</dict>
+	</dict>
+	<key>webaddress</key>
+	<string>https://github.com/swim2sun</string>
+</dict>
+</plist>
