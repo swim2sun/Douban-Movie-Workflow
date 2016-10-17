@@ -26,7 +26,7 @@ html = response.read()
 patten1 = re.compile(r'(\s\s+)|\n')
 html = re.sub(patten1, ' ', html)
 patten2 = re.compile(r'(<span style="font-size:12px;">)|</span>')
-patten3 = re.compile(r'<div class="star clearfix">\s*?<span class="pl">')
+patten3 = re.compile(r'<div class="star clearfix">\s*?<span class="allstar00"></span>\s*?<span class="pl">')
 html = re.sub(patten3, '<div class="star clearfix"> <span class="rating_nums"> </span><span class="pl">', html)
 find_re = re.compile(
     r'<a class="nbg.+?<img src="(.+?)".+?<div class="pl2">.+?<a href="(.+?)".+?>(.+?)</a>.+?<p class="pl">(.+?)</p>.+?<div class="star clearfix">.*?<span class="rating_nums">(.*?)</span>.*?<span class="pl">(.+?)</span>',
