@@ -29,24 +29,23 @@ patten2 = re.compile(r'(<span style="font-size:12px;">)|</span>')
 patten3 = re.compile(r'<div class="star clearfix">\s*?<span class="allstar00"></span>\s*?<span class="pl">')
 html = re.sub(patten3, '<div class="star clearfix"> <span class="rating_nums"> </span><span class="pl">', html)
 find_re = re.compile(
-    r'<a class="nbg.+?<img src="(.+?)".+?<div class="pl2">.+?<a href="(.+?)".+?>(.+?)</a>.+?<p class="pl">(.+?)</p>.+?<div class="star clearfix">.*?<span class="rating_nums">(.*?)</span>.*?<span class="pl">(.+?)</span>',
+    r'<div class="pl2">.+?<a href="(.+?)".+?>(.+?)</a>.+?<p class="pl">(.+?)</p>.+?<div class="star clearfix">.*?<span class="rating_nums">(.*?)</span>.*?<span class="pl">(.+?)</span>',
     re.DOTALL)
 
 fb = Feedback()
 for x in find_re.findall(html):
-    iconUrl = x[0]  # icon
-    link = x[1]  # 链接
-    title = x[2]  # 片名 包含别名
+    link = x[0]  # 链接
+    title = x[1]  # 片名 包含别名
     title = re.sub(patten2, '', title)
-    content = x[3]  # 简介
-    rating = x[4].strip()  # 评价
-    rate_count = x[5]  # 评价数
+    content = x[2]  # 简介
+    rating = x[3].strip()  # 评价
+    rate_count = x[4]  # 评价数
     if rating:
         rateNum = str(int(float(rating)))
     else:
         rateNum = 'unknow'
-        rating = '0.0'
+        rating = '?.?'
     fb.add_item(rating+"\t"+title,
-        subtitle=rate_count+"\t"+content,
-        arg=link,icon='favicons/'+rateNum+'.png')
+                subtitle=rate_count+"\t"+content,
+                arg=link,icon='favicons/'+rateNum+'.png')
 print fb
