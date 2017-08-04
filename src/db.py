@@ -5,47 +5,42 @@ import urllib
 import urllib2
 import re
 
-keyword = '{query}'
-# keyword = '蚁人'
-param = {"search_text": keyword}
-data = urllib.urlencode(param)
+# keyword = '{query}'
+keyword = '疯狂动物'
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_3 like Mac OS X) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.0 Mobile/14G60 Safari/602.1',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     # 'Accept-Encoding':'gzip, deflate, sdch',
-    'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.4',
+    'Accept-Language': 'zh-cn',
     'Cache-Control': 'max-age=0',
-    'Host': 'movie.douban.com',
-    'Proxy-Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1'
+    'Host': 'm.douban.com',
+    'DNT': '1'
 }
-request = urllib2.Request("https://movie.douban.com/subject_search", data, headers)
+request = urllib2.Request("https://m.douban.com/search?type=movie&query=" + urllib.quote(keyword), None, headers)
 response = urllib2.urlopen(request)
 html = response.read()
+print html
 
 patten1 = re.compile(r'(\s\s+)|\n')
 html = re.sub(patten1, ' ', html)
-patten2 = re.compile(r'(<span style="font-size:12px;">)|</span>')
-patten3 = re.compile(r'<div class="star clearfix">\s*?<span class="allstar00"></span>\s*?<span class="pl">')
-html = re.sub(patten3, '<div class="star clearfix"> <span class="rating_nums"> </span><span class="pl">', html)
 find_re = re.compile(
-    r'<div class="pl2">.+?<a href="(.+?)".+?>(.+?)</a>.+?<p class="pl">(.+?)</p>.+?<div class="star clearfix">.*?<span class="rating_nums">(.*?)</span>.*?<span class="pl">(.+?)</span>',
+    r'<li>\s<a href="(.+?)">\s<img src=".+?".+?<div class="subject-info">\s<span class="subject-title">(.+?)</span>.+?<p class="rating".+?<span>(.+?)</span>',
     re.DOTALL)
 
 fb = Feedback()
 for x in find_re.findall(html):
     link = x[0]  # 链接
     title = x[1]  # 片名 包含别名
-    title = re.sub(patten2, '', title)
-    content = x[2]  # 简介
-    rating = x[3].strip()  # 评价
-    rate_count = x[4]  # 评价数
-    if rating:
+    # content = x[2]  # 简介
+    rating = x[2].strip()  # 评价
+    # rate_count = x[4]  # 评价数
+    try:
         rateNum = str(int(float(rating)))
-    else:
+        halfRate = int((float(rating) + 0.5) / 2)
+    except (TypeError, ValueError):
         rateNum = 'unknow'
-        rating = '?.?'
-    fb.add_item(rating+"\t"+title,
-                subtitle=rate_count+"\t"+content,
-                arg=link,icon='favicons/'+rateNum+'.png')
+        halfRate = 0
+    fb.add_item(title,
+        subtitle="★★★★★☆☆☆☆☆"[(5 - halfRate) * 3:(10 - halfRate) * 3] + " " + rating,
+        arg=link, icon='favicons/' + rateNum + '.png')
 print fb
