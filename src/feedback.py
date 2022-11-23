@@ -1,8 +1,8 @@
 #author: Peter Okma
 import xml.etree.ElementTree as et
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+import importlib
+importlib.reload(sys)
 
 class Feedback():
     """Feeback used by Alfred Script Filter
@@ -24,7 +24,7 @@ class Feedback():
         Returns:
             XML string
         """
-        return et.tostring(self.feedback)
+        return et.tostring(self.feedback).decode('utf-8');
 
     def add_item(self, title, subtitle="", arg="", valid="yes", autocomplete="", icon="icon.png"):
         """
@@ -47,3 +47,4 @@ class Feedback():
         _sub.text = subtitle
         _icon = et.SubElement(item, 'icon')
         _icon.text = icon
+
